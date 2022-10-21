@@ -3,11 +3,12 @@ import 'package:xml/xml.dart';
 
 import 'dart:io';
 import 'dart:async';
+import 'dart:convert';
 
 void main() {
   var awesome = Awesome();
   print('awesome: ${awesome.isAwesome}');
-  File('/tmp/title-14.xml').readAsString().then((String contents) {
+  File('/tmp/title-34.xml').readAsString().then((String contents) {
     parse(contents);
   });
 }
@@ -20,19 +21,23 @@ String getMustHaveAttr(XmlElement element, String name) {
   return attribute;
 }
 
-class Title {
+class SubTitle {
   // fields
-  int number;
+  String number;
   XmlElement element;
 
   // getters/setters
 
   // constructors
-  Title(this.number, this.element);
+  SubTitle(this.number, this.element);
 
-  factory Title.fromXml(XmlElement element) {
-    int number = int.parse(getMustHaveAttr(element, "N"));
-    return Title(number, element);
+  factory SubTitle.empty(XmlElement element) {
+    return SubTitle("", element);
+  }
+
+  factory SubTitle.fromXml(XmlElement element) {
+    String number = getMustHaveAttr(element, "N");
+    return SubTitle(number, element);
   }
 
   // methods/functions
@@ -42,13 +47,41 @@ class Title {
   }
 }
 
+class Title {
+  // fields
+  int number;
+  var subTitles = [];
+
+  // getters/setters
+
+  // constructors
+  Title(this.number, this.subTitles);
+
+  factory Title.fromXml(XmlElement element) {
+    int number = int.parse(getMustHaveAttr(element, "N"));
+    var subTitles = [];
+    for(var subTitleElement in element.findAllElements("DIV2")) {
+      subTitles.add(SubTitle.fromXml(subTitleElement));
+    }
+    if (subTitles.isEmpty) {
+      subTitles.add(SubTitle.empty(element));
+    }
+    return Title(number, subTitles);
+  }
+
+  // methods/functions
+  @override
+  String toString() {
+    return subTitles.join("\n");
+  }
+}
+
 class CodeOfFederalRegulations {
-  var titles = {};
+  var titles = [];
 
   CodeOfFederalRegulations(XmlElement element) {
     for(var titleElement in element.findAllElements("DIV1")) {
-      var title = Title.fromXml(titleElement);
-      titles[title.number] = title;
+      titles.add(Title.fromXml(titleElement));
     }
   }
 
@@ -60,5 +93,5 @@ class CodeOfFederalRegulations {
 
 void parse(String content) {
   var ecfr = CodeOfFederalRegulations.fromString(content);
-  print(ecfr.titles[14].toString().substring(0, 200));
+  print(ecfr.titles[0].toString().substring(0, 200));
 }
