@@ -44,7 +44,7 @@ var unitTypes = [
 var leavesUnitTypeNames = ['SECTION', 'APPENDIX'];
 var leavesParentUnitTypeName = 'SUBJGRP';
 
-var schema = { for (var e in unitTypes) e.type : e };
+var schema = {for (var e in unitTypes) e.type: e};
 
 String getTypeNameByTag(String tag) {
   return unitTypes.firstWhere((element) => element.tag == tag).type;
@@ -52,6 +52,8 @@ String getTypeNameByTag(String tag) {
 
 class RegulationUnit {
   // fields
+  RegulationUnit? parent;
+
   String type;
   XmlElement element;
   var units = [];
@@ -59,12 +61,12 @@ class RegulationUnit {
   // getters/setters
 
   // constructors
-  RegulationUnit(this.type, this.units, this.element);
+  RegulationUnit(this.parent, this.type, this.units, this.element);
 
-  factory RegulationUnit.fromXml(String type, XmlElement element) {
-    print("in: $type");
-    var units = _getDescendantUnitsByType(type, element);
-    return RegulationUnit(type, units, element);
+  factory RegulationUnit.fromXml(
+      RegulationUnit? parent, String type, XmlElement element) {
+    var units = _getDescendantUnitsByType(parent, type, element);
+    return RegulationUnit(parent, type, units, element);
   }
 
   // methods/functions
@@ -76,16 +78,21 @@ class RegulationUnit {
     return units.join("\n");
   }
 
-  static List<RegulationUnit> _getDescendantUnitsByType(String type, XmlElement element) {
+  static List<RegulationUnit> _getDescendantUnitsByType(
+      RegulationUnit? parent, String type, XmlElement element) {
     var units = <RegulationUnit>[];
     var descendantTags = schema[type]!.descendants;
-    for(var descendantTag in descendantTags) {
+    for (var descendantTag in descendantTags) {
       for (var xmlElement in element.findAllElements(descendantTag)) {
-        units.add(RegulationUnit.fromXml(getTypeNameByTag(descendantTag), xmlElement));
+        units.add(RegulationUnit.fromXml(
+            parent, getTypeNameByTag(descendantTag), xmlElement));
       }
     }
-    if (units.isEmpty && type != leavesParentUnitTypeName && descendantTags.isNotEmpty) {
-      units = _getDescendantUnitsByType(schema[getTypeNameByTag(descendantTags[0])]!.type, element);
+    if (units.isEmpty &&
+        type != leavesParentUnitTypeName &&
+        descendantTags.isNotEmpty) {
+      units = _getDescendantUnitsByType(
+          parent, schema[getTypeNameByTag(descendantTags[0])]!.type, element);
     }
     return units;
   }
@@ -99,7 +106,8 @@ class CodeOfFederalRegulations {
   factory CodeOfFederalRegulations.fromString(String content) {
     final document = XmlDocument.parse(content);
     var element = document.getElement("ECFR")!;
-    return CodeOfFederalRegulations(RegulationUnit.fromXml("CFR", element));
+    return CodeOfFederalRegulations(
+        RegulationUnit.fromXml(null, "CFR", element));
   }
 }
 
