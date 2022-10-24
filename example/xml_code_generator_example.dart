@@ -13,7 +13,7 @@ void main() {
   });
 }
 
-String getMustHaveAttr(XmlElement element, String name) {
+String getRequiredAttr(XmlElement element, String name) {
   String? attribute = element.getAttribute(name);
   if (attribute == null) {
     throw XmlParserException("${element.name} must have '$name' attribute");
@@ -21,77 +21,89 @@ String getMustHaveAttr(XmlElement element, String name) {
   return attribute;
 }
 
-class SubTitle {
-  // fields
-  String number;
-  XmlElement element;
-
-  // getters/setters
-
-  // constructors
-  SubTitle(this.number, this.element);
-
-  factory SubTitle.empty(XmlElement element) {
-    return SubTitle("", element);
-  }
-
-  factory SubTitle.fromXml(XmlElement element) {
-    String number = getMustHaveAttr(element, "N");
-    return SubTitle(number, element);
-  }
-
-  // methods/functions
-  @override
-  String toString() {
-    return element.toString();
-  }
+class UnitDescriptor {
+  String type;
+  String tag;
+  var descendants = <String>[];
+  UnitDescriptor(this.type, this.tag, this.descendants);
 }
 
-class Title {
+var unitTypes = [
+  UnitDescriptor('CFR', 'ECFR', ['DIV1']),
+  UnitDescriptor('TITLE', 'DIV1', ['DIV2']),
+  UnitDescriptor('SUBTITLE', 'DIV2', ['DIV3']),
+  UnitDescriptor('CHAPTER', 'DIV3', ['DIV4']),
+  UnitDescriptor('SUBCHAPTER', 'DIV4', ['DIV5']),
+  UnitDescriptor('PART', 'DIV5', ['DIV6']),
+  UnitDescriptor('SUBPART', 'DIV6', ['DIV7']),
+  UnitDescriptor('SUBJGRP', 'DIV7', ['DIV8', 'DIV9']),
+  UnitDescriptor('SECTION', 'DIV8', []),
+  UnitDescriptor('APPENDIX', 'DIV9', [])
+];
+
+var leavesUnitTypeNames = ['SECTION', 'APPENDIX'];
+var leavesParentUnitTypeName = 'SUBJGRP';
+
+var schema = { for (var e in unitTypes) e.type : e };
+
+String getTypeNameByTag(String tag) {
+  return unitTypes.firstWhere((element) => element.tag == tag).type;
+}
+
+class RegulationUnit {
   // fields
-  int number;
-  var subTitles = [];
+  String type;
+  XmlElement element;
+  var units = [];
 
   // getters/setters
 
   // constructors
-  Title(this.number, this.subTitles);
+  RegulationUnit(this.type, this.units, this.element);
 
-  factory Title.fromXml(XmlElement element) {
-    int number = int.parse(getMustHaveAttr(element, "N"));
-    var subTitles = [];
-    for(var subTitleElement in element.findAllElements("DIV2")) {
-      subTitles.add(SubTitle.fromXml(subTitleElement));
-    }
-    if (subTitles.isEmpty) {
-      subTitles.add(SubTitle.empty(element));
-    }
-    return Title(number, subTitles);
+  factory RegulationUnit.fromXml(String type, XmlElement element) {
+    print("in: $type");
+    var units = _getDescendantUnitsByType(type, element);
+    return RegulationUnit(type, units, element);
   }
 
   // methods/functions
   @override
   String toString() {
-    return subTitles.join("\n");
+    if (leavesUnitTypeNames.contains(type)) {
+      return element.toString();
+    }
+    return units.join("\n");
+  }
+
+  static List<RegulationUnit> _getDescendantUnitsByType(String type, XmlElement element) {
+    var units = <RegulationUnit>[];
+    var descendantTags = schema[type]!.descendants;
+    for(var descendantTag in descendantTags) {
+      for (var xmlElement in element.findAllElements(descendantTag)) {
+        units.add(RegulationUnit.fromXml(getTypeNameByTag(descendantTag), xmlElement));
+      }
+    }
+    if (units.isEmpty && type != leavesParentUnitTypeName && descendantTags.isNotEmpty) {
+      units = _getDescendantUnitsByType(schema[getTypeNameByTag(descendantTags[0])]!.type, element);
+    }
+    return units;
   }
 }
 
 class CodeOfFederalRegulations {
-  var titles = [];
+  RegulationUnit content;
 
-  CodeOfFederalRegulations(XmlElement element) {
-    for(var titleElement in element.findAllElements("DIV1")) {
-      titles.add(Title.fromXml(titleElement));
-    }
-  }
+  CodeOfFederalRegulations(this.content);
 
   factory CodeOfFederalRegulations.fromString(String content) {
     final document = XmlDocument.parse(content);
-    return CodeOfFederalRegulations(document.getElement("ECFR")!);
+    var element = document.getElement("ECFR")!;
+    return CodeOfFederalRegulations(RegulationUnit.fromXml("CFR", element));
   }
 }
 
 void parse(String content) {
   var ecfr = CodeOfFederalRegulations.fromString(content);
-  print(ecfr.titles[0].toString().substring(0, 200));
+  print(ecfr.content.units[0].toString().substring(0, 50));
 }
