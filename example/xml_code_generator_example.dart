@@ -22,7 +22,42 @@ void compare(CodeOfFederalRegulations src, CodeOfFederalRegulations dst) {
 }
 
 void compareUnit(RegulationUnit src, RegulationUnit dst) {
-  print("compare");
+  var srcMap = {for (var u in src.units) u.number : u};
+  var dstMap = {for (var u in dst.units) u.number : u};
+
+  var srcSet = srcMap.keys.toSet();
+  var dstSet = dstMap.keys.toSet();
+  if (srcSet.contains("147.11")) {
+    print("src: $srcSet");
+  }
+  if (dstSet.contains("147.11")) {
+    print("dst: $dstSet");
+  }
+
+  // check for deleted sections
+  var deleted = srcSet.difference(dstSet).forEach((number) {
+    print("deleted $number");
+  });
+
+  // check for added sections
+  var added = dstSet.difference(srcSet).forEach((number) {
+    print("added $number");
+  });
+
+  // compare existing sections
+  // TODO: handle case when section becomes descendant
+  // TODO: handle case when section becomes parent
+  // TODO: handle case when section moves around
+  srcSet.intersection(dstSet).forEach((number) {
+    if (leavesUnitTypeNames.contains(srcMap[number].type) &&
+        leavesUnitTypeNames.contains(dstMap[number].type)) {
+      // end node / leave
+      // TODO: compare content
+    } else {
+      // intermediate node, proceed recursively deeper
+      compareUnit(srcMap[number], dstMap[number]);
+    }
+  });
 }
 
 String getRequiredAttr(XmlElement element, String name) {
