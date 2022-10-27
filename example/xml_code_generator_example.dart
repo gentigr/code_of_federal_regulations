@@ -66,6 +66,7 @@ class RegulationUnit {
   // fields
   RegulationUnit? parent;
 
+  String number;
   String type;
   XmlElement element;
   var units = [];
@@ -73,12 +74,13 @@ class RegulationUnit {
   // getters/setters
 
   // constructors
-  RegulationUnit(this.parent, this.type, this.units, this.element);
+  RegulationUnit(this.parent, this.number, this.type, this.units, this.element);
 
   factory RegulationUnit.fromXml(
       RegulationUnit? parent, String type, XmlElement element) {
+    String number = element.getAttribute("N") ?? "";
     var units = _getDescendantUnitsByType(parent, type, element);
-    return RegulationUnit(parent, type, units, element);
+    return RegulationUnit(parent, number, type, units, element);
   }
 
   // methods/functions
