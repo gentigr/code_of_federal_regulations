@@ -18,30 +18,24 @@ void main() async {
 }
 
 void compare(CodeOfFederalRegulations src, CodeOfFederalRegulations dst) {
-  compareUnit(src.content, dst.content);
+  compareUnit("", src.content, dst.content);
 }
 
-void compareUnit(RegulationUnit src, RegulationUnit dst) {
+void compareUnit(String keyPrefix, RegulationUnit src, RegulationUnit dst) {
   var srcMap = {for (var u in src.units) u.number : u};
   var dstMap = {for (var u in dst.units) u.number : u};
 
   var srcSet = srcMap.keys.toSet();
   var dstSet = dstMap.keys.toSet();
-  if (srcSet.contains("147.11")) {
-    print("src: $srcSet");
-  }
-  if (dstSet.contains("147.11")) {
-    print("dst: $dstSet");
-  }
 
   // check for deleted sections
   var deleted = srcSet.difference(dstSet).forEach((number) {
-    print("deleted $number");
+    print("deleted $keyPrefix::$number");
   });
 
   // check for added sections
   var added = dstSet.difference(srcSet).forEach((number) {
-    print("added $number");
+    print("added $keyPrefix::$number");
   });
 
   // compare existing sections
@@ -55,7 +49,7 @@ void compareUnit(RegulationUnit src, RegulationUnit dst) {
       // TODO: compare content
     } else {
       // intermediate node, proceed recursively deeper
-      compareUnit(srcMap[number], dstMap[number]);
+      compareUnit("$keyPrefix::$number", srcMap[number], dstMap[number]);
     }
   });
 }
