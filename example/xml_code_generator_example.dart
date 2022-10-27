@@ -5,12 +5,24 @@ import 'dart:io';
 import 'dart:async';
 import 'dart:convert';
 
-void main() {
+void main() async {
   var awesome = Awesome();
   print('awesome: ${awesome.isAwesome}');
-  File('/tmp/title-34.xml').readAsString().then((String contents) {
-    parse(contents);
+  Future<CodeOfFederalRegulations> ecfr20220916 = File('/tmp/title-14-at-2022-09-16.xml').readAsString().then((String contents) {
+    return parse(contents);
   });
+  Future<CodeOfFederalRegulations> ecfr20221017 = File('/tmp/title-14-at-2022-10-17.xml').readAsString().then((String contents) {
+    return parse(contents);
+  });
+  compare(await ecfr20220916, await ecfr20221017);
+}
+
+void compare(CodeOfFederalRegulations src, CodeOfFederalRegulations dst) {
+  compareUnit(src.content, dst.content);
+}
+
+void compareUnit(RegulationUnit src, RegulationUnit dst) {
+  print("compare");
 }
 
 String getRequiredAttr(XmlElement element, String name) {
@@ -111,7 +123,8 @@ class CodeOfFederalRegulations {
   }
 }
 
-void parse(String content) {
+CodeOfFederalRegulations parse(String content) {
   var ecfr = CodeOfFederalRegulations.fromString(content);
   print(ecfr.content.units[0].toString().substring(0, 50));
+  return ecfr;
 }
