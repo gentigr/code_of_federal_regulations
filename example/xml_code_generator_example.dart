@@ -47,6 +47,9 @@ void compareUnit(String keyPrefix, RegulationUnit src, RegulationUnit dst) {
         leavesUnitTypeNames.contains(dstMap[number].type)) {
       // end node / leave
       // TODO: compare content
+      if (srcMap[number].element.toString().compareTo(dstMap[number].element.toString()) != 0) {
+        print("modified: $keyPrefix::$number");
+      }
     } else {
       // intermediate node, proceed recursively deeper
       compareUnit("$keyPrefix::$number", srcMap[number], dstMap[number]);
