@@ -1,5 +1,6 @@
 import 'package:xml_code_generator/xml_code_generator.dart';
 import 'package:xml/xml.dart';
+import 'package:diff_match_patch/diff_match_patch.dart';
 
 import 'dart:io';
 import 'dart:async';
@@ -45,10 +46,16 @@ void compareUnit(String keyPrefix, RegulationUnit src, RegulationUnit dst) {
   srcSet.intersection(dstSet).forEach((number) {
     if (leavesUnitTypeNames.contains(srcMap[number].type) &&
         leavesUnitTypeNames.contains(dstMap[number].type)) {
-      // end node / leave
-      // TODO: compare content
+      // end node / leave to compare content
       if (srcMap[number].element.toString().compareTo(dstMap[number].element.toString()) != 0) {
         print("modified: $keyPrefix::$number");
+        DiffMatchPatch dmp = DiffMatchPatch();
+        List<Diff> d = dmp.diff(srcMap[number].element.toString(), dstMap[number].element.toString());
+        // List<Diff> d = dmp.diff('Hello World.', 'Goodbye World.');
+        // Result: [(-1, "Hell"), (1, "G"), (0, "o"), (1, "odbye"), (0, " World.")]
+        dmp.diffCleanupSemantic(d);
+        // Result: [(-1, "Hello"), (1, "Goodbye"), (0, " World.")]
+        print(d);
       }
     } else {
       // intermediate node, proceed recursively deeper
