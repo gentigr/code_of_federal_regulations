@@ -14,4 +14,8 @@ class CodeOfFederalRegulations {
     return CodeOfFederalRegulations(
         RegulationUnit.fromXml(null, "CFR", element));
   }
+
+  void compareTo(CodeOfFederalRegulations dst) {
+    content.compareTo("", dst.content);
+  }
 }
