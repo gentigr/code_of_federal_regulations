@@ -1,8 +1,8 @@
 /// Support for doing something awesome.
 ///
 /// More dartdocs go here.
-library xml_code_generator;
+library code_of_federal_regulations;
 
-export 'src/xml_code_generator_base.dart';
+export 'src/code_of_federal_regulations.dart';
 
 // TODO: Export any libraries intended for clients of this package.
