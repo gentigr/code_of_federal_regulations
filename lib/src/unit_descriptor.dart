@@ -21,7 +21,7 @@ var unitTypes = [
 
 const cfrDocumentHeadTag = 'ECFR';
 
-const cfrContentStartKeyword = 'cfr';
+const cfrGlobalPrefix = 'cfr';
 
 var leavesUnitTypeNames = ['SECTION', 'APPENDIX'];
 var leavesParentUnitTypeName = 'SUBJGRP';

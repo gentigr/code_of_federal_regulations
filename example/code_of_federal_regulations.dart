@@ -14,11 +14,11 @@ void main() async {
   });
   (await ecfr20220916).compareTo(await ecfr20221017).forEach((change) {
     if (change.operation == UnitChangeOperation.modification) {
-      print("${change.operation}: ${change.dst!.contentKey}");
+      print("${change.operation}: ${change.dst!.key}");
     } else if (change.operation == UnitChangeOperation.deletion) {
-      print("${change.operation}: ${change.src!.contentKey}");
+      print("${change.operation}: ${change.src!.key}");
     } else if (change.operation == UnitChangeOperation.addition) {
-      print("${change.operation}: ${change.dst!.contentKey}");
+      print("${change.operation}: ${change.dst!.key}");
     }
   });
 }

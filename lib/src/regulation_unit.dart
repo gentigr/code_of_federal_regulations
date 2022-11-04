@@ -5,29 +5,33 @@ import 'package:xml/xml.dart';
 
 class RegulationUnit {
   // fields
-  String contentKey;
+  String key;
 
-  String number;
   String type;
   XmlElement element;
   var units = <RegulationUnit>[];
 
   // getters/setters
+  String get number {
+    return key.substring(key.lastIndexOf(':'));
+  }
 
   // constructors
-  RegulationUnit(this.contentKey, this.number, this.type, this.units, this.element);
+  RegulationUnit(this.key, this.type, this.units, this.element);
 
   factory RegulationUnit.fromXmlDocument(XmlDocument document) {
     var element = XmlParseUtils.getRequiredChild(document, cfrDocumentHeadTag);
-    var units = _getDescendantUnitsByType(cfrContentStartKeyword, getTypeNameByTag(cfrDocumentHeadTag), element);
-    return RegulationUnit(cfrContentStartKeyword, cfrContentStartKeyword, getTypeNameByTag(cfrDocumentHeadTag), units, element);
+    var typeName = getTypeNameByTag(cfrDocumentHeadTag);
+    var units = _getDescendantUnitsByType(cfrGlobalPrefix, typeName, element);
+    return RegulationUnit(cfrGlobalPrefix, typeName, units, element);
   }
 
-  factory RegulationUnit.fromXmlUnit(String parentContentKey, String type, XmlElement element) {
+  factory RegulationUnit.fromXmlUnit(
+      String parentKey, String type, XmlElement element) {
     String number = XmlParseUtils.getRequiredAttr(element, 'N');
-    String contentKey = "$parentContentKey::$number";
-    var units = _getDescendantUnitsByType(contentKey, type, element);
-    return RegulationUnit(contentKey, number, type, units, element);
+    String key = "$parentKey::$number";
+    var units = _getDescendantUnitsByType(key, type, element);
+    return RegulationUnit(key, type, units, element);
   }
 
   // methods/functions
@@ -77,20 +81,20 @@ class RegulationUnit {
   }
 
   static List<RegulationUnit> _getDescendantUnitsByType(
-      String contentKey, String type, XmlElement element) {
+      String key, String type, XmlElement element) {
     var units = <RegulationUnit>[];
     var descendantTags = schema[type]!.descendants;
     for (var descendantTag in descendantTags) {
       for (var xmlElement in element.findAllElements(descendantTag)) {
         units.add(RegulationUnit.fromXmlUnit(
-            contentKey, getTypeNameByTag(descendantTag), xmlElement));
+            key, getTypeNameByTag(descendantTag), xmlElement));
       }
     }
     if (units.isEmpty &&
         type != leavesParentUnitTypeName &&
         descendantTags.isNotEmpty) {
       units = _getDescendantUnitsByType(
-          contentKey, schema[getTypeNameByTag(descendantTags[0])]!.type, element);
+          key, schema[getTypeNameByTag(descendantTags[0])]!.type, element);
     }
     return units;
   }
