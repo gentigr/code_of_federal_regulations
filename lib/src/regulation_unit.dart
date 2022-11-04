@@ -2,7 +2,6 @@ import 'package:code_of_federal_regulations/src/unit_change.dart';
 import 'package:code_of_federal_regulations/src/unit_descriptor.dart';
 import 'package:code_of_federal_regulations/src/xml_parse_utils.dart';
 import 'package:xml/xml.dart';
-import 'package:diff_match_patch/diff_match_patch.dart';
 
 class RegulationUnit {
   // fields
@@ -60,8 +59,7 @@ class RegulationUnit {
         .where((n) => _isLeafUnit(srcUnits[n]!) && _isLeafUnit(dstUnits[n]!))
         // pick unit which has content differences
         .where((n) => _isContentDifferent(srcUnits[n]!, dstUnits[n]!))
-        .map((n) => UnitChange(srcUnits[n], dstUnits[n],
-             _collectChanges(srcUnits[n]!, dstUnits[n]!)))
+        .map((n) => UnitChange.fromModification(srcUnits[n], dstUnits[n]))
         .toList();
 
     var childrenChanges = _collectDescendantChanges(
@@ -104,13 +102,6 @@ class RegulationUnit {
   static Map<String, RegulationUnit> _numberToRegulationUnitMap(
       List<RegulationUnit> units) {
     return {for (var u in units) u.number : u};
-  }
-
-  static List<Diff> _collectChanges(RegulationUnit src, RegulationUnit dst) {
-    DiffMatchPatch dmp = DiffMatchPatch();
-    var changes = dmp.diff(src.element.toString(), dst.element.toString());
-    dmp.diffCleanupSemantic(changes);
-    return changes;
   }
 
   static List<UnitChange> _collectDescendantChanges(

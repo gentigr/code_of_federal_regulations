@@ -20,7 +20,26 @@ class UnitChange {
 
   UnitChange(this.src, this.dst, this.changes);
 
-  UnitChange.fromAddition(this.dst): src = null, changes = List.empty();
+  UnitChange.fromAddition(this.dst)
+      : src = null,
+        changes = List.empty();
 
-  UnitChange.fromDeletion(this.src): dst = null, changes = List.empty();
+  UnitChange.fromDeletion(this.src)
+      : dst = null,
+        changes = List.empty();
+
+  UnitChange.fromModification(this.src, this.dst)
+      : changes = _collectChanges(src, dst);
+
+  static List<Diff> _collectChanges(RegulationUnit? src, RegulationUnit? dst) {
+    if (src == null || dst == null) {
+      throw FormatException(
+          "Modification change must have both regulation units defined: "
+          "src is null -> ${src == null}, dst is null -> ${dst == null}");
+    }
+    DiffMatchPatch dmp = DiffMatchPatch();
+    var changes = dmp.diff(src.element.toString(), dst.element.toString());
+    dmp.diffCleanupSemantic(changes);
+    return changes;
+  }
 }
