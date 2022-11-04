@@ -43,7 +43,6 @@ class RegulationUnit {
     var deletions = srcKeys
         .difference(dstKeys)
         .map((number) {
-          print("-: ${srcUnits[number].contentKey}");
           return UnitChange.fromDeletion(srcUnits[number]);
         })
         .toList();
@@ -52,7 +51,6 @@ class RegulationUnit {
     var additions = dstKeys
         .difference(srcKeys)
         .map((number) {
-          print("+: ${dstUnits[number].contentKey}");
           return UnitChange.fromAddition(dstUnits[number]);
         })
         .toList();
@@ -67,7 +65,6 @@ class RegulationUnit {
         // pick unit which has content differences
         .where((number) => srcUnits[number].element.toString().compareTo(dstUnits[number].element.toString()) != 0)
         .map((number) {
-          print("±: ${dstUnits[number].contentKey}");
           DiffMatchPatch dmp = DiffMatchPatch();
           List<Diff> changes = dmp.diff(srcUnits[number].element.toString(), dstUnits[number].element.toString());
           dmp.diffCleanupSemantic(changes);
