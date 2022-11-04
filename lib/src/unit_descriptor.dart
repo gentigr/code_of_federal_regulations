@@ -1,4 +1,3 @@
-
 class UnitDescriptor {
   String type;
   String tag;

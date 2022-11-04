@@ -9,7 +9,7 @@ enum UnitChangeOperation {
 
   @override
   String toString() {
-    switch(this) {
+    switch (this) {
       case UnitChangeOperation.addition:
         return '+';
       case UnitChangeOperation.deletion:

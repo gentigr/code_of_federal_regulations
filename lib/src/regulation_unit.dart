@@ -58,7 +58,8 @@ class RegulationUnit {
     // TODO: handle case when section becomes descendant
     // TODO: handle case when section becomes parent
     // TODO: handle case when section moves around
-    var modifications = srcKeys.intersection(dstKeys)
+    var modifications = srcKeys
+        .intersection(dstKeys)
         // pick leaf unit which is eligible for content comparison
         .where((n) => _isLeafUnit(srcUnits[n]!) && _isLeafUnit(dstUnits[n]!))
         // pick unit which has content differences
@@ -66,8 +67,8 @@ class RegulationUnit {
         .map((n) => UnitChange.fromModification(srcUnits[n], dstUnits[n]))
         .toList();
 
-    var childrenChanges = _collectDescendantChanges(
-        srcKeys, dstKeys, srcUnits, dstUnits);
+    var childrenChanges =
+        _collectDescendantChanges(srcKeys, dstKeys, srcUnits, dstUnits);
 
     return deletions + additions + modifications + childrenChanges;
   }
@@ -105,17 +106,20 @@ class RegulationUnit {
 
   static Map<String, RegulationUnit> _numberToRegulationUnitMap(
       List<RegulationUnit> units) {
-    return {for (var u in units) u.number : u};
+    return {for (var u in units) u.number: u};
   }
 
   static List<UnitChange> _collectDescendantChanges(
-      Set<String> srcKeys, Set<String> dstKeys,
+      Set<String> srcKeys,
+      Set<String> dstKeys,
       Map<String, RegulationUnit> srcUnits,
       Map<String, RegulationUnit> dstUnits) {
     var childrenChanges = <UnitChange>[];
-    srcKeys.intersection(dstKeys).where(
-            (number) => !(_isLeafUnit(srcUnits[number]!)
-            && _isLeafUnit(dstUnits[number]!))).forEach((number) {
+    srcKeys
+        .intersection(dstKeys)
+        .where((number) =>
+            !(_isLeafUnit(srcUnits[number]!) && _isLeafUnit(dstUnits[number]!)))
+        .forEach((number) {
       // intermediate node, proceed recursively deeper
       childrenChanges.addAll(srcUnits[number]!.compareTo(dstUnits[number]!));
     });
