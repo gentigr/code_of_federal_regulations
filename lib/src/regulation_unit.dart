@@ -31,7 +31,7 @@ class RegulationUnit {
   }
 
   // methods/functions
-  void compareTo(String keyPrefix, RegulationUnit dst) {
+  void compareTo(RegulationUnit dst) {
     var src = this;
     var srcMap = {for (var u in src.units) u.number : u};
     var dstMap = {for (var u in dst.units) u.number : u};
@@ -41,14 +41,12 @@ class RegulationUnit {
 
     // check for deleted sections
     var deleted = srcSet.difference(dstSet).forEach((number) {
-      print("deleted $keyPrefix::$number");
-      print("deleted $contentKey");
+      print("-: ${srcMap[number].contentKey}");
     });
 
     // check for added sections
     var added = dstSet.difference(srcSet).forEach((number) {
-      print("added $keyPrefix::$number");
-      print("added ${dstMap[number].contentKey}");
+      print("+: ${dstMap[number].contentKey}");
     });
 
     // compare existing sections
@@ -60,7 +58,7 @@ class RegulationUnit {
           leavesUnitTypeNames.contains(dstMap[number].type)) {
         // end node / leave to compare content
         if (srcMap[number].element.toString().compareTo(dstMap[number].element.toString()) != 0) {
-          print("modified: $keyPrefix::$number");
+          print("±: ${dstMap[number].contentKey}");
           DiffMatchPatch dmp = DiffMatchPatch();
           List<Diff> d = dmp.diff(srcMap[number].element.toString(), dstMap[number].element.toString());
           // List<Diff> d = dmp.diff('Hello World.', 'Goodbye World.');
@@ -71,7 +69,7 @@ class RegulationUnit {
         }
       } else {
         // intermediate node, proceed recursively deeper
-        srcMap[number].compareTo("$keyPrefix::$number", dstMap[number]);
+        srcMap[number].compareTo(dstMap[number]);
       }
     });
   }

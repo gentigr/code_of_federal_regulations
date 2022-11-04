@@ -17,6 +17,6 @@ class CodeOfFederalRegulations {
   }
 
   void compareTo(CodeOfFederalRegulations dst) {
-    content.compareTo("", dst.content);
+    content.compareTo(dst.content);
   }
 }
