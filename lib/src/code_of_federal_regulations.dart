@@ -1,5 +1,6 @@
 // TODO: Put public facing types in this file.
 import 'package:code_of_federal_regulations/src/regulation_unit.dart';
+import 'package:code_of_federal_regulations/src/xml_parse_utils.dart';
 import 'package:xml/xml.dart';
 
 /// Checks if you are awesome. Spoiler: you are.
@@ -9,7 +10,7 @@ class CodeOfFederalRegulations {
   CodeOfFederalRegulations(this.content);
 
   factory CodeOfFederalRegulations.fromXml(XmlDocument document) {
-    var element = document.getElement("ECFR")!;
+    var element = XmlParseUtils.getRequiredChild(document, "ECFR");
     return CodeOfFederalRegulations(RegulationUnit.fromHeadXml(element));
   }
 
