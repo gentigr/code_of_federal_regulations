@@ -1,4 +1,5 @@
 import 'package:code_of_federal_regulations/src/unit_descriptor.dart';
+import 'package:code_of_federal_regulations/src/xml_parse_utils.dart';
 import 'package:xml/xml.dart';
 import 'package:diff_match_patch/diff_match_patch.dart';
 
@@ -18,12 +19,16 @@ class RegulationUnit {
   RegulationUnit(this.parent, this.contentKey, this.number, this.type, this.units, this.element);
 
   factory RegulationUnit.fromHeadXml(XmlElement element) {
-    return RegulationUnit.fromUnitXml(null, "cfr", "CFR", element);
+    String number = "cfr";
+    String contentKey = number;
+    var units = _getDescendantUnitsByType(null, contentKey, "CFR", element);
+    return RegulationUnit(null, contentKey, number, "CFR", units, element);
+
   }
 
   factory RegulationUnit.fromUnitXml(
       RegulationUnit? parent, String parentContentKey, String type, XmlElement element) {
-    String number = element.getAttribute("N") ?? "";
+    String number = XmlParseUtils.getRequiredAttr(element, "N");
     String contentKey = "$parentContentKey::$number";
     var units = _getDescendantUnitsByType(parent, contentKey, type, element);
     return RegulationUnit(parent, contentKey, number, type, units, element);
