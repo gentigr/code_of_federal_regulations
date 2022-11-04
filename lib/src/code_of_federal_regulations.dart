@@ -1,5 +1,6 @@
 // TODO: Put public facing types in this file.
 import 'package:code_of_federal_regulations/src/regulation_unit.dart';
+import 'package:code_of_federal_regulations/src/unit_change.dart';
 import 'package:xml/xml.dart';
 
 /// Checks if you are awesome. Spoiler: you are.
@@ -16,7 +17,7 @@ class CodeOfFederalRegulations {
     return CodeOfFederalRegulations.fromXml(XmlDocument.parse(content));
   }
 
-  void compareTo(CodeOfFederalRegulations dst) {
-    content.compareTo(dst.content);
+  List<UnitChange> compareTo(CodeOfFederalRegulations dst) {
+    return content.compareTo(dst.content);
   }
 }
