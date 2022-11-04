@@ -11,7 +11,7 @@ class RegulationUnit {
   String number;
   String type;
   XmlElement element;
-  var units = [];
+  var units = <RegulationUnit>[];
 
   // getters/setters
 
@@ -33,8 +33,8 @@ class RegulationUnit {
 
   // methods/functions
   List<UnitChange> compareTo(RegulationUnit dst) {
-    var srcUnits = {for (var u in units) u.number : u};
-    var dstUnits = {for (var u in dst.units) u.number : u};
+    var srcUnits = _numberToRegulationUnitMap(units);
+    var dstUnits = _numberToRegulationUnitMap(dst.units);
 
     var srcKeys = srcUnits.keys.toSet();
     var dstKeys = dstUnits.keys.toSet();
@@ -42,17 +42,13 @@ class RegulationUnit {
     // check for deleted sections
     var deletions = srcKeys
         .difference(dstKeys)
-        .map((number) {
-          return UnitChange.fromDeletion(srcUnits[number]);
-        })
+        .map((n) => UnitChange.fromDeletion(srcUnits[n]))
         .toList();
 
     // check for added sections
     var additions = dstKeys
         .difference(srcKeys)
-        .map((number) {
-          return UnitChange.fromAddition(dstUnits[number]);
-        })
+        .map((n) => UnitChange.fromAddition(dstUnits[n]))
         .toList();
 
     // compare existing sections
@@ -61,29 +57,17 @@ class RegulationUnit {
     // TODO: handle case when section moves around
     var modifications = srcKeys.intersection(dstKeys)
         // pick leaf unit which is eligible for content comparison
-        .where((number) => _isLeafUnit(srcUnits[number]) && _isLeafUnit(dstUnits[number]))
+        .where((n) => _isLeafUnit(srcUnits[n]!) && _isLeafUnit(dstUnits[n]!))
         // pick unit which has content differences
-        .where((number) => srcUnits[number].element.toString().compareTo(dstUnits[number].element.toString()) != 0)
-        .map((number) {
-          DiffMatchPatch dmp = DiffMatchPatch();
-          List<Diff> changes = dmp.diff(srcUnits[number].element.toString(), dstUnits[number].element.toString());
-          dmp.diffCleanupSemantic(changes);
-          return UnitChange(srcUnits[number], dstUnits[number], changes);
-    }).toList();
+        .where((n) => _isContentDifferent(srcUnits[n]!, dstUnits[n]!))
+        .map((n) => UnitChange(srcUnits[n], dstUnits[n],
+             _collectChanges(srcUnits[n]!, dstUnits[n]!)))
+        .toList();
 
-    var childrenChanges = <UnitChange>[];
-    srcKeys.intersection(dstKeys).where(
-            (number) => !(_isLeafUnit(srcUnits[number])
-            && _isLeafUnit(dstUnits[number]))).forEach((number) {
-      // intermediate node, proceed recursively deeper
-      childrenChanges.addAll(srcUnits[number].compareTo(dstUnits[number]));
-    });
+    var childrenChanges = _collectDescendantChanges(
+        srcKeys, dstKeys, srcUnits, dstUnits);
 
     return deletions + additions + modifications + childrenChanges;
-  }
-
-  static bool _isLeafUnit(RegulationUnit unit) {
-    return leavesUnitTypeNames.contains(unit.type);
   }
 
   @override
@@ -111,5 +95,39 @@ class RegulationUnit {
           contentKey, schema[getTypeNameByTag(descendantTags[0])]!.type, element);
     }
     return units;
+  }
+
+  static bool _isContentDifferent(RegulationUnit src, RegulationUnit dst) {
+    return src.element.toString().compareTo(dst.element.toString()) != 0;
+  }
+
+  static Map<String, RegulationUnit> _numberToRegulationUnitMap(
+      List<RegulationUnit> units) {
+    return {for (var u in units) u.number : u};
+  }
+
+  static List<Diff> _collectChanges(RegulationUnit src, RegulationUnit dst) {
+    DiffMatchPatch dmp = DiffMatchPatch();
+    var changes = dmp.diff(src.element.toString(), dst.element.toString());
+    dmp.diffCleanupSemantic(changes);
+    return changes;
+  }
+
+  static List<UnitChange> _collectDescendantChanges(
+      Set<String> srcKeys, Set<String> dstKeys,
+      Map<String, RegulationUnit> srcUnits,
+      Map<String, RegulationUnit> dstUnits) {
+    var childrenChanges = <UnitChange>[];
+    srcKeys.intersection(dstKeys).where(
+            (number) => !(_isLeafUnit(srcUnits[number]!)
+            && _isLeafUnit(dstUnits[number]!))).forEach((number) {
+      // intermediate node, proceed recursively deeper
+      childrenChanges.addAll(srcUnits[number]!.compareTo(dstUnits[number]!));
+    });
+    return childrenChanges;
+  }
+
+  static bool _isLeafUnit(RegulationUnit unit) {
+    return leavesUnitTypeNames.contains(unit.type);
   }
 }
