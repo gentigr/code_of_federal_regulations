@@ -1,5 +1,4 @@
 import 'package:code_of_federal_regulations/src/code_of_federal_regulations.dart';
-import 'package:xml/xml.dart';
 
 import 'dart:io';
 import 'dart:async';
@@ -13,15 +12,6 @@ void main() async {
   });
   (await ecfr20220916).compareTo(await ecfr20221017);
 }
-
-String getRequiredAttr(XmlElement element, String name) {
-  String? attribute = element.getAttribute(name);
-  if (attribute == null) {
-    throw XmlParserException("${element.name} must have '$name' attribute");
-  }
-  return attribute;
-}
-
 
 CodeOfFederalRegulations parse(String content) {
   var ecfr = CodeOfFederalRegulations.fromXmlString(content);
