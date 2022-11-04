@@ -5,7 +5,6 @@ import 'package:diff_match_patch/diff_match_patch.dart';
 
 class RegulationUnit {
   // fields
-  RegulationUnit? parent;
   String contentKey;
 
   String number;
@@ -16,20 +15,19 @@ class RegulationUnit {
   // getters/setters
 
   // constructors
-  RegulationUnit(this.parent, this.contentKey, this.number, this.type, this.units, this.element);
+  RegulationUnit(this.contentKey, this.number, this.type, this.units, this.element);
 
   factory RegulationUnit.fromXmlDocument(XmlDocument document) {
     var element = XmlParseUtils.getRequiredChild(document, cfrDocumentHeadTag);
-    var units = _getDescendantUnitsByType(null, cfrContentStartKeyword, getTypeNameByTag(cfrDocumentHeadTag), element);
-    return RegulationUnit(null, cfrContentStartKeyword, cfrContentStartKeyword, getTypeNameByTag(cfrDocumentHeadTag), units, element);
+    var units = _getDescendantUnitsByType(cfrContentStartKeyword, getTypeNameByTag(cfrDocumentHeadTag), element);
+    return RegulationUnit(cfrContentStartKeyword, cfrContentStartKeyword, getTypeNameByTag(cfrDocumentHeadTag), units, element);
   }
 
-  factory RegulationUnit.fromXmlUnit(
-      RegulationUnit? parent, String parentContentKey, String type, XmlElement element) {
+  factory RegulationUnit.fromXmlUnit(String parentContentKey, String type, XmlElement element) {
     String number = XmlParseUtils.getRequiredAttr(element, "N");
     String contentKey = "$parentContentKey::$number";
-    var units = _getDescendantUnitsByType(parent, contentKey, type, element);
-    return RegulationUnit(parent, contentKey, number, type, units, element);
+    var units = _getDescendantUnitsByType(contentKey, type, element);
+    return RegulationUnit(contentKey, number, type, units, element);
   }
 
   // methods/functions
@@ -87,20 +85,20 @@ class RegulationUnit {
   }
 
   static List<RegulationUnit> _getDescendantUnitsByType(
-      RegulationUnit? parent, String contentKey, String type, XmlElement element) {
+      String contentKey, String type, XmlElement element) {
     var units = <RegulationUnit>[];
     var descendantTags = schema[type]!.descendants;
     for (var descendantTag in descendantTags) {
       for (var xmlElement in element.findAllElements(descendantTag)) {
         units.add(RegulationUnit.fromXmlUnit(
-            parent, contentKey, getTypeNameByTag(descendantTag), xmlElement));
+            contentKey, getTypeNameByTag(descendantTag), xmlElement));
       }
     }
     if (units.isEmpty &&
         type != leavesParentUnitTypeName &&
         descendantTags.isNotEmpty) {
       units = _getDescendantUnitsByType(
-          parent, contentKey, schema[getTypeNameByTag(descendantTags[0])]!.type, element);
+          contentKey, schema[getTypeNameByTag(descendantTags[0])]!.type, element);
     }
     return units;
   }
