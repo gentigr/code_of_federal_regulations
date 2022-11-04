@@ -24,7 +24,7 @@ class RegulationUnit {
   }
 
   factory RegulationUnit.fromXmlUnit(String parentContentKey, String type, XmlElement element) {
-    String number = XmlParseUtils.getRequiredAttr(element, "N");
+    String number = XmlParseUtils.getRequiredAttr(element, 'N');
     String contentKey = "$parentContentKey::$number";
     var units = _getDescendantUnitsByType(contentKey, type, element);
     return RegulationUnit(contentKey, number, type, units, element);
@@ -81,7 +81,7 @@ class RegulationUnit {
     if (leavesUnitTypeNames.contains(type)) {
       return element.toString();
     }
-    return units.join("\n");
+    return units.join('\n');
   }
 
   static List<RegulationUnit> _getDescendantUnitsByType(
