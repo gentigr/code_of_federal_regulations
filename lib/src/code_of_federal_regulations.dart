@@ -10,8 +10,7 @@ class CodeOfFederalRegulations {
 
   factory CodeOfFederalRegulations.fromXml(XmlDocument document) {
     var element = document.getElement("ECFR")!;
-    return CodeOfFederalRegulations(
-        RegulationUnit.fromXml(null, "", "CFR", element));
+    return CodeOfFederalRegulations(RegulationUnit.fromHeadXml(element));
   }
 
   factory CodeOfFederalRegulations.fromXmlString(String content) {

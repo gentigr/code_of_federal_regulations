@@ -17,13 +17,14 @@ class RegulationUnit {
   // constructors
   RegulationUnit(this.parent, this.contentKey, this.number, this.type, this.units, this.element);
 
-  factory RegulationUnit.fromXml(
+  factory RegulationUnit.fromHeadXml(XmlElement element) {
+    return RegulationUnit.fromUnitXml(null, "cfr", "CFR", element);
+  }
+
+  factory RegulationUnit.fromUnitXml(
       RegulationUnit? parent, String parentContentKey, String type, XmlElement element) {
     String number = element.getAttribute("N") ?? "";
     String contentKey = "$parentContentKey::$number";
-    if(type == 'SECTION' && parentContentKey.contains("147")) {
-      print("SSSSSSSSSSSSSSSSSSSSS $parentContentKey and $contentKey");
-    }
     var units = _getDescendantUnitsByType(parent, contentKey, type, element);
     return RegulationUnit(parent, contentKey, number, type, units, element);
   }
@@ -88,7 +89,7 @@ class RegulationUnit {
     var descendantTags = schema[type]!.descendants;
     for (var descendantTag in descendantTags) {
       for (var xmlElement in element.findAllElements(descendantTag)) {
-        units.add(RegulationUnit.fromXml(
+        units.add(RegulationUnit.fromUnitXml(
             parent, contentKey, getTypeNameByTag(descendantTag), xmlElement));
       }
     }
