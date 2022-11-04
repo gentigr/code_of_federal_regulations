@@ -5,6 +5,7 @@ import 'package:diff_match_patch/diff_match_patch.dart';
 class RegulationUnit {
   // fields
   RegulationUnit? parent;
+  String contentKey;
 
   String number;
   String type;
@@ -14,13 +15,17 @@ class RegulationUnit {
   // getters/setters
 
   // constructors
-  RegulationUnit(this.parent, this.number, this.type, this.units, this.element);
+  RegulationUnit(this.parent, this.contentKey, this.number, this.type, this.units, this.element);
 
   factory RegulationUnit.fromXml(
-      RegulationUnit? parent, String type, XmlElement element) {
+      RegulationUnit? parent, String parentContentKey, String type, XmlElement element) {
     String number = element.getAttribute("N") ?? "";
-    var units = _getDescendantUnitsByType(parent, type, element);
-    return RegulationUnit(parent, number, type, units, element);
+    String contentKey = "$parentContentKey::$number";
+    if(type == 'SECTION' && parentContentKey.contains("147")) {
+      print("SSSSSSSSSSSSSSSSSSSSS $parentContentKey and $contentKey");
+    }
+    var units = _getDescendantUnitsByType(parent, contentKey, type, element);
+    return RegulationUnit(parent, contentKey, number, type, units, element);
   }
 
   // methods/functions
@@ -35,11 +40,13 @@ class RegulationUnit {
     // check for deleted sections
     var deleted = srcSet.difference(dstSet).forEach((number) {
       print("deleted $keyPrefix::$number");
+      print("deleted $contentKey");
     });
 
     // check for added sections
     var added = dstSet.difference(srcSet).forEach((number) {
       print("added $keyPrefix::$number");
+      print("added ${dstMap[number].contentKey}");
     });
 
     // compare existing sections
@@ -58,7 +65,7 @@ class RegulationUnit {
           // Result: [(-1, "Hell"), (1, "G"), (0, "o"), (1, "odbye"), (0, " World.")]
           dmp.diffCleanupSemantic(d);
           // Result: [(-1, "Hello"), (1, "Goodbye"), (0, " World.")]
-          print(d);
+          // print(d);
         }
       } else {
         // intermediate node, proceed recursively deeper
@@ -76,20 +83,20 @@ class RegulationUnit {
   }
 
   static List<RegulationUnit> _getDescendantUnitsByType(
-      RegulationUnit? parent, String type, XmlElement element) {
+      RegulationUnit? parent, String contentKey, String type, XmlElement element) {
     var units = <RegulationUnit>[];
     var descendantTags = schema[type]!.descendants;
     for (var descendantTag in descendantTags) {
       for (var xmlElement in element.findAllElements(descendantTag)) {
         units.add(RegulationUnit.fromXml(
-            parent, getTypeNameByTag(descendantTag), xmlElement));
+            parent, contentKey, getTypeNameByTag(descendantTag), xmlElement));
       }
     }
     if (units.isEmpty &&
         type != leavesParentUnitTypeName &&
         descendantTags.isNotEmpty) {
       units = _getDescendantUnitsByType(
-          parent, schema[getTypeNameByTag(descendantTags[0])]!.type, element);
+          parent, contentKey, schema[getTypeNameByTag(descendantTags[0])]!.type, element);
     }
     return units;
   }

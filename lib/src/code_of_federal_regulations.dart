@@ -12,7 +12,7 @@ class CodeOfFederalRegulations {
     final document = XmlDocument.parse(content);
     var element = document.getElement("ECFR")!;
     return CodeOfFederalRegulations(
-        RegulationUnit.fromXml(null, "CFR", element));
+        RegulationUnit.fromXml(null, "", "CFR", element));
   }
 
   void compareTo(CodeOfFederalRegulations dst) {
