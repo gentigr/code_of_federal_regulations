@@ -61,48 +61,27 @@ class RegulationUnit {
     // TODO: handle case when section becomes descendant
     // TODO: handle case when section becomes parent
     // TODO: handle case when section moves around
-    var modifications = srcKeys.intersection(dstKeys).map((number) {
-      if (_isLeafUnit(srcUnits[number])
-          && _isLeafUnit(dstUnits[number])) {
-        // end node / leave to compare content
-        if (srcUnits[number].element.toString().compareTo(dstUnits[number].element.toString()) != 0) {
+    var modifications = srcKeys.intersection(dstKeys)
+        // pick leaf unit which is eligible for content comparison
+        .where((number) => _isLeafUnit(srcUnits[number]) && _isLeafUnit(dstUnits[number]))
+        // pick unit which has content differences
+        .where((number) => srcUnits[number].element.toString().compareTo(dstUnits[number].element.toString()) != 0)
+        .map((number) {
           print("±: ${dstUnits[number].contentKey}");
           DiffMatchPatch dmp = DiffMatchPatch();
           List<Diff> changes = dmp.diff(srcUnits[number].element.toString(), dstUnits[number].element.toString());
-          // List<Diff> d = dmp.diff('Hello World.', 'Goodbye World.');
-          // Result: [(-1, "Hell"), (1, "G"), (0, "o"), (1, "odbye"), (0, " World.")]
           dmp.diffCleanupSemantic(changes);
-          // Result: [(-1, "Hello"), (1, "Goodbye"), (0, " World.")]
-          // print(d);
           return UnitChange(srcUnits[number], dstUnits[number], changes);
-        }
-        return UnitChange(null, null, List.empty());
-      // } else {
-      //   // intermediate node, proceed recursively deeper
-      //   srcUnits[number].compareTo(dstUnits[number]);
-      } else {
-        return UnitChange(null, null, List.empty());
-      }
     }).toList();
-    //
-    // var childrenChanges = srcKeys.intersection(dstKeys).where(
-    //         (number) => !(_isLeafUnit(srcUnits[number])
-    //             && _isLeafUnit(dstUnits[number]))).map((number) {
-    //               print("$contentKey::$number");
-    //               print("${srcKeys.intersection(dstKeys)}");
-    //   return srcUnits[number].compareTo(dstUnits[number]);
-    // })
-    //     .reduce((value, element) => value + element)
-    //     .toList();
 
     var childrenChanges = <UnitChange>[];
     srcKeys.intersection(dstKeys).where(
             (number) => !(_isLeafUnit(srcUnits[number])
             && _isLeafUnit(dstUnits[number]))).forEach((number) {
-      // print("$contentKey::$number");
-      // print("${srcKeys.intersection(dstKeys)}");
+      // intermediate node, proceed recursively deeper
       childrenChanges.addAll(srcUnits[number].compareTo(dstUnits[number]));
     });
+
     return deletions + additions + modifications + childrenChanges;
   }
 
