@@ -18,15 +18,13 @@ class RegulationUnit {
   // constructors
   RegulationUnit(this.parent, this.contentKey, this.number, this.type, this.units, this.element);
 
-  factory RegulationUnit.fromHeadXml(XmlElement element) {
-    String number = "cfr";
-    String contentKey = number;
-    var units = _getDescendantUnitsByType(null, contentKey, "CFR", element);
-    return RegulationUnit(null, contentKey, number, "CFR", units, element);
-
+  factory RegulationUnit.fromXmlDocument(XmlDocument document) {
+    var element = XmlParseUtils.getRequiredChild(document, cfrDocumentHeadTag);
+    var units = _getDescendantUnitsByType(null, cfrContentStartKeyword, getTypeNameByTag(cfrDocumentHeadTag), element);
+    return RegulationUnit(null, cfrContentStartKeyword, cfrContentStartKeyword, getTypeNameByTag(cfrDocumentHeadTag), units, element);
   }
 
-  factory RegulationUnit.fromUnitXml(
+  factory RegulationUnit.fromXmlUnit(
       RegulationUnit? parent, String parentContentKey, String type, XmlElement element) {
     String number = XmlParseUtils.getRequiredAttr(element, "N");
     String contentKey = "$parentContentKey::$number";
@@ -94,7 +92,7 @@ class RegulationUnit {
     var descendantTags = schema[type]!.descendants;
     for (var descendantTag in descendantTags) {
       for (var xmlElement in element.findAllElements(descendantTag)) {
-        units.add(RegulationUnit.fromUnitXml(
+        units.add(RegulationUnit.fromXmlUnit(
             parent, contentKey, getTypeNameByTag(descendantTag), xmlElement));
       }
     }

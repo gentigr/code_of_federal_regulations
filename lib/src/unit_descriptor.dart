@@ -19,6 +19,10 @@ var unitTypes = [
   UnitDescriptor('APPENDIX', 'DIV9', [])
 ];
 
+const cfrDocumentHeadTag = 'ECFR';
+
+const cfrContentStartKeyword = 'cfr';
+
 var leavesUnitTypeNames = ['SECTION', 'APPENDIX'];
 var leavesParentUnitTypeName = 'SUBJGRP';
 
