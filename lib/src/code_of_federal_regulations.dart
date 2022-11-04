@@ -8,11 +8,14 @@ class CodeOfFederalRegulations {
 
   CodeOfFederalRegulations(this.content);
 
-  factory CodeOfFederalRegulations.fromString(String content) {
-    final document = XmlDocument.parse(content);
+  factory CodeOfFederalRegulations.fromXml(XmlDocument document) {
     var element = document.getElement("ECFR")!;
     return CodeOfFederalRegulations(
         RegulationUnit.fromXml(null, "", "CFR", element));
+  }
+
+  factory CodeOfFederalRegulations.fromXmlString(String content) {
+    return CodeOfFederalRegulations.fromXml(XmlDocument.parse(content));
   }
 
   void compareTo(CodeOfFederalRegulations dst) {

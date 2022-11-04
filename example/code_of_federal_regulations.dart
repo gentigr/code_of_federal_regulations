@@ -24,7 +24,7 @@ String getRequiredAttr(XmlElement element, String name) {
 
 
 CodeOfFederalRegulations parse(String content) {
-  var ecfr = CodeOfFederalRegulations.fromString(content);
+  var ecfr = CodeOfFederalRegulations.fromXmlString(content);
   print(ecfr.content.units[0].toString().substring(0, 50));
   return ecfr;
 }
