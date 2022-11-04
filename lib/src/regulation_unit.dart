@@ -1,3 +1,4 @@
+import 'package:code_of_federal_regulations/src/unit_change.dart';
 import 'package:code_of_federal_regulations/src/unit_descriptor.dart';
 import 'package:code_of_federal_regulations/src/xml_parse_utils.dart';
 import 'package:xml/xml.dart';
@@ -31,47 +32,82 @@ class RegulationUnit {
   }
 
   // methods/functions
-  void compareTo(RegulationUnit dst) {
-    var src = this;
-    var srcMap = {for (var u in src.units) u.number : u};
-    var dstMap = {for (var u in dst.units) u.number : u};
+  List<UnitChange> compareTo(RegulationUnit dst) {
+    var srcUnits = {for (var u in units) u.number : u};
+    var dstUnits = {for (var u in dst.units) u.number : u};
 
-    var srcSet = srcMap.keys.toSet();
-    var dstSet = dstMap.keys.toSet();
+    var srcKeys = srcUnits.keys.toSet();
+    var dstKeys = dstUnits.keys.toSet();
 
     // check for deleted sections
-    var deleted = srcSet.difference(dstSet).forEach((number) {
-      print("-: ${srcMap[number].contentKey}");
-    });
+    var deletions = srcKeys
+        .difference(dstKeys)
+        .map((number) {
+          print("-: ${srcUnits[number].contentKey}");
+          return UnitChange.fromDeletion(srcUnits[number]);
+        })
+        .toList();
 
     // check for added sections
-    var added = dstSet.difference(srcSet).forEach((number) {
-      print("+: ${dstMap[number].contentKey}");
-    });
+    var additions = dstKeys
+        .difference(srcKeys)
+        .map((number) {
+          print("+: ${dstUnits[number].contentKey}");
+          return UnitChange.fromAddition(dstUnits[number]);
+        })
+        .toList();
 
     // compare existing sections
     // TODO: handle case when section becomes descendant
     // TODO: handle case when section becomes parent
     // TODO: handle case when section moves around
-    srcSet.intersection(dstSet).forEach((number) {
-      if (leavesUnitTypeNames.contains(srcMap[number].type) &&
-          leavesUnitTypeNames.contains(dstMap[number].type)) {
+    var modifications = srcKeys.intersection(dstKeys).map((number) {
+      if (_isLeafUnit(srcUnits[number])
+          && _isLeafUnit(dstUnits[number])) {
         // end node / leave to compare content
-        if (srcMap[number].element.toString().compareTo(dstMap[number].element.toString()) != 0) {
-          print("±: ${dstMap[number].contentKey}");
+        if (srcUnits[number].element.toString().compareTo(dstUnits[number].element.toString()) != 0) {
+          print("±: ${dstUnits[number].contentKey}");
           DiffMatchPatch dmp = DiffMatchPatch();
-          List<Diff> d = dmp.diff(srcMap[number].element.toString(), dstMap[number].element.toString());
+          List<Diff> changes = dmp.diff(srcUnits[number].element.toString(), dstUnits[number].element.toString());
           // List<Diff> d = dmp.diff('Hello World.', 'Goodbye World.');
           // Result: [(-1, "Hell"), (1, "G"), (0, "o"), (1, "odbye"), (0, " World.")]
-          dmp.diffCleanupSemantic(d);
+          dmp.diffCleanupSemantic(changes);
           // Result: [(-1, "Hello"), (1, "Goodbye"), (0, " World.")]
           // print(d);
+          return UnitChange(srcUnits[number], dstUnits[number], changes);
         }
+        return UnitChange(null, null, List.empty());
+      // } else {
+      //   // intermediate node, proceed recursively deeper
+      //   srcUnits[number].compareTo(dstUnits[number]);
       } else {
-        // intermediate node, proceed recursively deeper
-        srcMap[number].compareTo(dstMap[number]);
+        return UnitChange(null, null, List.empty());
       }
+    }).toList();
+    //
+    // var childrenChanges = srcKeys.intersection(dstKeys).where(
+    //         (number) => !(_isLeafUnit(srcUnits[number])
+    //             && _isLeafUnit(dstUnits[number]))).map((number) {
+    //               print("$contentKey::$number");
+    //               print("${srcKeys.intersection(dstKeys)}");
+    //   return srcUnits[number].compareTo(dstUnits[number]);
+    // })
+    //     .reduce((value, element) => value + element)
+    //     .toList();
+
+    var childrenChanges = <UnitChange>[];
+    srcKeys.intersection(dstKeys).where(
+            (number) => !(_isLeafUnit(srcUnits[number])
+            && _isLeafUnit(dstUnits[number]))).forEach((number) {
+      // print("$contentKey::$number");
+      // print("${srcKeys.intersection(dstKeys)}");
+      childrenChanges.addAll(srcUnits[number].compareTo(dstUnits[number]));
     });
+    return deletions + additions + modifications + childrenChanges;
+  }
+
+  static bool _isLeafUnit(RegulationUnit unit) {
+    return leavesUnitTypeNames.contains(unit.type);
   }
 
   @override
