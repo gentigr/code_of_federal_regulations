@@ -16,6 +16,11 @@ class RegulationUnit {
     return key.substring(key.lastIndexOf(':'));
   }
 
+  String get title {
+    XmlElement? head = element.getElement('HEAD');
+    return head != null ? head.text.trim() : '';
+  }
+
   // constructors
   RegulationUnit(this.key, this.type, this.units, this.element);
 
